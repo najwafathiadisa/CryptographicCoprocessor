@@ -35,10 +35,28 @@ architecture Behavioral of alu is
         );
     end component subtractor;
 
-    signal tmp_out1: std_logic_vector(16-1 downto 0);
-    signal tmp_out2: std_logic_vector(16-1 downto 0);
-    signal tmp: std_logic_vector(16-1 downto 0);
+    signal add_out: std_logic_vector(16-1 downto 0);
+    signal sub_out: std_logic_vector(16-1 downto 0);
 
 begin
-    
+    --Using component to add and sub
+    u1_N_bit_adder: adder generic map ( N => 16) -- ABUS + BBUS
+        port map( src1 => ABUS, src2 => BBUS, res => add_out); 
+    u2_N_bit_subtractor: subtractor generic map ( N => 16) -- ABUS - BBUS
+        port map( src1 => ABUS, src2 => BBUS, res => sub_out); 
+
+-- Another ALU instructions
+    process(ALUctrl,ABUS,BBUS,add_out,sub_out)
+    begin 
+        case(ALUctrl) is
+            when "0000" =>  ALUOUT <= add_out;  -- ADD
+            when "0001" =>  ALUOUT <= sub_out ;-- SUB 
+            when "0010" =>  ALUOUT <= ABUS and BBUS; -- AND
+            when "0011" =>  ALUOUT <= ABUS or BBUS; -- OR
+            when "0100" =>  ALUOUT <= ABUS xor BBUS; -- XOR
+            when "0101" =>  ALUOUT <= not ABUS; -- NOT
+            when "0110" =>  ALUOUT <= ABUS; -- MOVE
+            when others => ALUOUT <= add_out; 
+        end case;
+    end process;
 end Behavioral;
