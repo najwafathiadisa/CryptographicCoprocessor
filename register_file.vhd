@@ -37,4 +37,27 @@ architecture Behavioral of register_file is
 
 begin
 
+    --Write
+    write_operation: process(CLK) 
+    begin
+        if(rising_edge(CLK)) then
+            if(RdEn='1') then -- Write when RdWEn = '1'
+                REG_FILE(to_integer(unsigned(Rd))) <= RES;
+            end if;
+        end if;
+    end process;
+
+    --Read
+    read_operation: process(CLK)
+    begin
+        if(rising_edge(CLK)) then
+            if(RST='1') then
+                SRCa <= x"0000";
+                SRCb <= x"0000";
+            else
+                SRCa <= REG_FILE(to_integer(unsigned(Ra)));
+                SRCb <= REG_FILE(to_integer(unsigned(Rb)));
+            end if;
+        end if;
+    end process;
 end Behavioral;

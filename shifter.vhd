@@ -14,5 +14,13 @@ end shifter;
 
 architecture Behavioral of shifter is
 begin
-
+    process(SHIFTINPUT,SHIFT_Ctrl)
+    begin
+        case(SHIFT_Ctrl) is
+            when "1000" => SHIFTOUT <= SHIFTINPUT(7 downto 0)&SHIFTINPUT(15 downto 8);-- ROR8
+            when "1001" => SHIFTOUT <= SHIFTINPUT(3 downto 0)&SHIFTINPUT(15 downto 4);-- ROR4
+            when "1010" => SHIFTOUT <= SHIFTINPUT(7 downto 0) & "00000000"; -- SLL8
+            when others => SHIFTOUT <= x"0000";
+        end case;
+    end process;
 end Behavioral;
