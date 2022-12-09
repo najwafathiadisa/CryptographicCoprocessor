@@ -45,5 +45,42 @@ architecture Behavioral of structural is
     signal lut_out: std_logic_vector(7 downto 0);
 
 begin
-
+    --Alu Block
+    ALU_unit: alu port map( 
+        ABUS => A_BUS, 
+        BBUS => B_BUS,
+        ALUctrl => CTRL,
+        ALUOUT => alu_out
+    ); 
+    
+    --Shifter Block
+    shifter_unit: shifter generic map (N => 16) -- shifter
+        port map(
+            SHIFTINPUT => B_BUS,
+            SHIFT_Ctrl => CTRL,
+            SHIFTOUT => shifter_out 
+        ); 
+    
+    --Non Linear Lookup Hasher Block
+    non_linear_lookup_unit1: non_linear_lookup
+        port map( 
+            LUTIN => A_BUS(7 downto 0), 
+            LUTOUT => lut_out
+        );
+        hasher_out <= A_BUS(15 downto 8) & shifter_out;
+    
+    --Control Unit
+    control_logic: process(CTRL, alu_out, hasher_out, shifter_out) begin
+        case(CTRL(3 downto 3)) is
+            when "0" => 
+                RES <= alu_out;
+            when others => 
+                case(CTRL(1 downto 0)) is
+                    when "11" =>
+                        RES <= hasher_out;
+                    when others =>
+                        RES <= shifter_out;
+                end case;
+        end case;
+    end process control_logic;
 end Behavioral;
