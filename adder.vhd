@@ -7,9 +7,9 @@ entity adder is
       N: integer:=32
    );
    port (
-      src1 : IN std_logic_vector (N-1 downto 0);
-      src2 : IN std_logic_vector (N-1 downto 0);
-      res : OUT std_logic_vector (N-1 downto 0)
+      src1 : IN std_logic_vector (N-1 downto 0); -- First data source for the Adder
+      src2 : IN std_logic_vector (N-1 downto 0); -- Second data source for the Adder
+      res : OUT std_logic_vector (N-1 downto 0) -- The sum of both data source
    );
 end entity adder;
 
