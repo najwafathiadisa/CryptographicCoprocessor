@@ -6,9 +6,9 @@ entity shifter is
         N: integer:=16
     );
     Port ( 
-        SHIFTINPUT : in  STD_LOGIC_VECTOR(N-1 downto 0);
-        SHIFT_Ctrl : in  STD_LOGIC_VECTOR(3 downto 0); 
-        SHIFTOUT: out  STD_LOGIC_VECTOR(N-1 downto 0)
+        SHIFTINPUT : in  STD_LOGIC_VECTOR(N-1 downto 0); --Value to be shifted
+        SHIFT_Ctrl : in  STD_LOGIC_VECTOR(3 downto 0); --Opcode of the operation
+        SHIFTOUT: out  STD_LOGIC_VECTOR(N-1 downto 0) --Shifted Value
     );
 end shifter;
 
