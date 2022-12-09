@@ -44,5 +44,49 @@ architecture Behavioral of mini_proc is
     signal RstCtrl: std_logic; --Signal that determine if RST = 1 and CTRL = 0111
 
 begin
+    -- 16 bit Register
+    Register_Block: register_file port map(
+        CLK => CLK, RST => RST,
+        RdEn => WrEn, RES => data3, Ra => Ra, Rb => Rb, Rd => Rd_tmp,
+        SRCa => data1, SRCb => data2
+    );
 
+    -- Structural Block
+    Structural_Block: structural port map( 
+        A_BUS => data1, B_BUS => data2, CTRL => CTRL_tmp,
+        RES => data3
+    );
+
+    sync_proc : process(CLK)
+    begin
+        if (rising_edge(CLK)) then PS <= NS;
+        end if;
+    end process;
+
+    comb_proc : process(PS, RST, RstCtrl, CTRL)
+    begin
+        if (RST = '1' AND CTRL = "0111") then
+            RstCtrl <= '1';
+        else
+            RstCtrl <= '0';
+        end if;
+
+        case PS is
+        when ST0 => 
+            if (RstCtrl = '1') then
+                NS <= ST2;
+                CTRL_tmp <= x"0";
+                Rd_tmp <= x"0";
+                WrEn <= '0';
+            else
+                NS <= ST1;
+                CTRL_tmp <= CTRL;
+                Rd_tmp <= Rd;
+                WrEn <= '1';
+            end if;
+        when others =>
+            NS <= ST0;
+        end case;
+    end process;      
+    VAL <= data3;         
 end Behavioral;
