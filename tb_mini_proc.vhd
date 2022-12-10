@@ -95,7 +95,20 @@ begin
                 report "Error at XOR Operation"
                 severity Error;
             wait for clock_half_period;
+            
+            RST <= '1'; -- Reset State
+            CTRL <= "0100";-- XOR
+            Ra <= "0111"; -- R7
+            Rb <= "0011"; -- R3
+            Rd <= "0111"; -- R7
+            wait for clock_period;
+            wait for clock_half_period;
+            assert (VAL = "0000000000000000")
+                report "Error at RESET state"
+                severity Error;
+            wait for clock_half_period;
 
+            RST <= '0'; -- Set State
             CTRL <= "0101";-- NOT
             Ra <= "0111"; -- R7
             wait for clock_period;
