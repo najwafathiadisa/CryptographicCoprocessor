@@ -8,88 +8,152 @@ architecture behavior OF tb_mini_proc IS
     -- Component Declaration for the coprocessor
     component mini_proc
         port(
-                clock : IN  std_logic;
-                reset : IN  std_logic;
-                CTRL : IN  std_logic_vector(3 downto 0);
-                Ra : IN  std_logic_vector(3 downto 0);
-                Rb : IN  std_logic_vector(3 downto 0);
-                Rd : IN  std_logic_vector(3 downto 0);
-                Val : OUT std_logic_vector(15 downto 0)
+            --Inputs
+            CLK, RST : IN  std_logic; -- clock and reset
+            CTRL, Ra, Rb, Rd : IN  std_logic_vector(3 downto 0); -- CTRL: Opcode; Ra, Rb: Source Registers; Rd: Destination Register 
+            --Output
+            VAL : OUT std_logic_vector(15 downto 0) -- Result value of computation
         );
     end component;
 
     --Inputs
-    signal clock : std_logic;
-    signal reset : std_logic;
-    signal CTRL : std_logic_vector(3 downto 0);
-    signal Ra : std_logic_vector(3 downto 0);
-    signal Rb : std_logic_vector(3 downto 0);
-    signal Rd : std_logic_vector(3 downto 0);
-    --Outputs
-    signal Val : std_logic_vector(15 downto 0);
+    signal CLK, RST : std_logic := '0';
+    signal CTRL, Ra, Rb, Rd : std_logic_vector(3 downto 0) := (others => '0');
+    --Output
+    signal VAL : std_logic_vector(15 downto 0);
 
     -- Clock period definitions
     constant clock_period : time := 100 ps;
+    constant clock_half_period : time := 50 ps;
 
 begin
         uut: mini_proc port map (
-            clock => clock,
-            reset => reset,
+            CLK => CLK,
+            RST => RST,
             CTRL => CTRL,
             Ra => Ra,
             Rb => Rb,
             Rd => Rd,
-            Val => Val
+            VAL => VAL
         );
 
-        stim_proc: process
+        testbench_proc: process
         begin  
-            reset <= '1';-- Reset State
-            Ra <= "0000";
-            Rb <= "0000";
-            Rd <= "0000";
-            CTRL <= "0111";
-            wait for clock_period; 
-            reset <= '0';-- ADD R5,R4, R12
-            Ra <= "0101";
-            Rb <= "0100";
-            Rd <= "1100";
-            CTRL <= "0000";
+
+            RST <= '0'; -- Set State
+            CTRL <= "0000";-- ADD
+            Ra <= "0111"; -- R7
+            Rb <= "1011"; -- R11
+            Rd <= "0111"; -- R7
             wait for clock_period;
-            Ra <= "0001";-- XOR R1,R8,R7
-            Rb <= "1000";
-            Rd <= "0111";
-            CTRL <= "0100";
+            wait for clock_half_period;
+            assert (VAL = "0001001000000000")
+                report "Error at ADD Operation"
+                severity Error;
+            wait for clock_half_period;
+
+            CTRL <= "0001";-- SUB
+            Ra <= "0111"; -- R7
+            Rb <= "1110"; -- R14
+            Rd <= "0111"; -- R7
             wait for clock_period;
-            Ra <= "0001";-- ROR4 R12,R0
-            Rb <= "1100";
-            Rd <= "0000";
-            CTRL <= "1001";
-            wait for clock_period;    
-            Ra <= "0001";-- SLL8 R9,R3
-            Rb <= "1001";
-            Rd <= "0011";
-            CTRL <= "1010";
+            wait for clock_half_period;
+            assert (VAL = "0001000100100000")
+                report "Error at SUB Operation"
+                severity Error;
+            wait for clock_half_period;
+
+            CTRL <= "0010";-- AND
+            Ra <= "0111"; -- R7
+            Rb <= "1100"; -- R12
+            Rd <= "0111"; -- R7
             wait for clock_period;
-            Ra <= "0000";-- ADD R0,R7,R10
-            Rb <= "0111";
-            Rd <= "1010";
-            CTRL <= "0000";
+            wait for clock_half_period;
+            assert (VAL = "0000000000000000")
+                report "Error at AND Operation"
+                severity Error;
+            wait for clock_half_period;
+
+            CTRL <= "0011";-- OR
+            Ra <= "0111"; -- R7
+            Rb <= "1010"; -- R10
+            Rd <= "0111"; -- R7
             wait for clock_period;
-            Ra <= "0111";-- SUB R7,R3,R12
-            Rb <= "0011";
-            Rd <= "1100";
-            CTRL <= "0001";
+            wait for clock_half_period;
+            assert (VAL = "0000000010100000")
+                report "Error at OR Operation"
+                severity Error;
+            wait for clock_half_period;
+
+            CTRL <= "0100";-- XOR
+            Ra <= "0111"; -- R7
+            Rb <= "0011"; -- R3
+            Rd <= "0111"; -- R7
             wait for clock_period;
-            Ra <= "1100";-- AND R12,R10,R9
-            Rb <= "1010";
-            Rd <= "1001";
-            CTRL <= "0010";
+            wait for clock_half_period;
+            assert (VAL = "0000001110100000")
+                report "Error at XOR Operation"
+                severity Error;
+            wait for clock_half_period;
+
+            CTRL <= "0101";-- NOT
+            Ra <= "0111"; -- R7
             wait for clock_period;
-            Ra <= "1001"; --- LUT R9,R2
-            Rb <= "1010";
-            Rd <= "0010";
-            CTRL <= "1011";  
+            wait for clock_half_period;
+            assert (VAL = "1111110001011111")
+                report "Error at NOT Operation"
+                severity Error;
+            wait for clock_half_period;
+
+            CTRL <= "0110";-- MOVE
+            Ra <= "0111"; -- R7
+            Rd <= "1011"; -- R11
+            wait for clock_period;
+            wait for clock_half_period;
+            assert (VAL = "1111110001011111")
+                report "Error at MOVE Operation"
+                severity Error;
+            wait for clock_half_period;
+
+            CTRL <= "1000"; --ROR8
+            Rb <= "1011"; --R11
+            Rd <= "1011"; --R11
+            wait for clock_period;
+            wait for clock_half_period;
+            assert (VAL = "0101111111111100")
+                report "Error at ROR8 Operation"
+                severity Error;
+            wait for clock_half_period;
+
+            CTRL <= "1001"; --ROR4
+            Rb <= "1011"; --R11
+            Rd <= "1011"; --R11
+            wait for clock_period;
+            wait for clock_half_period;
+            assert (VAL = "1100010111111111")
+                report "Error at ROR4 Operation"
+                severity Error;
+            wait for clock_half_period;
+
+            CTRL <= "1010"; --SLL8
+            Rb <= "1011"; --R11
+            Rd <= "1011"; --R11
+            wait for clock_period;
+            wait for clock_half_period;
+            assert (VAL = "1111111100000000")
+                report "Error at SLL8 Operation"
+                severity Error;
+            wait for clock_half_period;
+
+            CTRL <= "1011";  --LUT
+            Ra <= "1011"; --R11
+            Rd <= "1011"; --R11
+            wait for clock_period;
+            wait for clock_half_period;
+            assert (VAL = "1111111110101001")
+                report "Error at LUT Operation"
+                severity Error;
+            wait for clock_half_period;
             wait;
     end process;
 end;
